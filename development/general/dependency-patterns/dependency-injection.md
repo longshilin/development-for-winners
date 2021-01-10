@@ -2,30 +2,32 @@
 
 ## What is it?
 
-Simply speaking its a way of resolving class dependencies using large container of type resolvers. There are plenty of **DI** frameworks for almost every modern programming language, and as we are focusing on **C#** there are plenty of frameworks like **Ninject**, **AutoFac**, **Unity** (Microsoft) and many more. However in the context of game dev (Unity) there are not that many which are supported, so the main options are **Zenject** and **StrangeIoC**, although for this example we will use **Ninject** here purely because it is slightly more lightweight, and there are lots of docs for it.
+简单地说，这是一种使用类型解析器的大型容器来解析类依赖关系的方法。几乎每种现代编程语言都有大量的DI框架，当我们关注C#语言时，也有大量的框架，比如**Ninject**、**AutoFac**、**Unity**（Microsoft）等等。然而，在game dev（Unity）的上下文中，支持的并不多，所以主要的选项是**Zenject**和**StrangeIoC**，尽管对于这个例子，我们将在这里使用**Ninject**，纯粹是因为它更轻量级，并且有很多文档。
 
-> You can find all the documentation and information on their websites:
+> 您可以在他们的网站上找到所有文档和信息：
 - [**Ninject**](https://github.com/ninject/ninject/wiki)
 - [**AutoFac**](https://autofaccn.readthedocs.io/en/latest/)
 
-At a high level almost all dependency injection frameworks share the same principals, so although we are using a specific framework here you can easily apply the same principals even if the syntax is different. So lets begin with a simple binding container file, this is where you often put all your setup bindings.
+> 还可以在这里学习到IOC相关概念[IOC](https://www.tutorialsteacher.com/ioc)
+
+在高层次上，几乎所有依赖注入框架都共享相同的主体，因此尽管我们在这里使用特定的框架，但是即使语法不同，您也可以轻松地应用相同的主体。因此，让我们从一个简单的绑定容器文件开始，这是您经常放置所有设置绑定的地方。
 
 ### Lifecycle
 
-Generally in the **DI** world you will have the same life cycle for your objects:
+通常在DI世界中，对象的生命周期是相同的:
 
 - Binding
 - Resolving
 - Activation
 - Deactivation
 
-So to begin with you will **bind** all your object telling them how they can be **resolved** then once this has been done you are often able to provide additional logic in terms of any custom code to run when an object is **activated** (instantiated) and when it is **deactivated** (disposed). Not all **DI** frameworks call these steps the same, i.e **Bind** may be known as **Register**, or **Resolve** may be known as **Get** etc but generally the syntactical differences mean little, its still the same thing.
+因此，首先，您将绑定所有对象，告诉它们如何解决这些问题，然后一旦完成，您通常能够提供在激活（实例化）对象和停用（释放）对象时运行的任何自定义代码方面的附加逻辑。并非所有的DI框架都将这些步骤称为相同的步骤，即Bind可能被称为Register，Resolve可能被称为Get等，但通常语法上的差异意义不大，仍然是相同的事情。
 
-Activation and Deactivation are not super important to know about as generally you wont be doing much in this area, but its worthwhile knowing that the concept exists, you also can build upon this and do things like **AOP** which we will discuss later.
+激活和去激活并不是非常重要，因为一般来说你在这方面不会做太多，但值得知道的是这个概念的存在，你也可以在此基础上做一些类似**AOP**的事情，我们将在后面讨论。
 
 ### Binding Setup
 
-So to begin with **Ninject** has the notion of a **MonoInstaller** which is where it contains all binding setup.
+所以从Ninject开始，它有一个MonoInstaller的概念，它包含所有绑定设置。
 
 ```csharp
 using Ninject;
@@ -40,14 +42,14 @@ public class MyInstaller : NinjectModule
 }
 ```
 
-Now as you can see we are binding the type `ISomething` to the class `SomeImplementation`, you can also use `typeof(T)` as an argument instead of the generic method used above. I am just making up the scenarios but hopefully you can visualize the interface and the class which implements it, in-case not here is how it would look:
+现在您可以看到，我们正在将类型 `ISomething` 绑定到类 `SomeImplementation`，您还可以使用 `typeof(T)` 作为参数，而不是上面使用的泛型方法。我只是在编一些场景，但希望您能将接口和实现它的类可视化，以防下面不是它的样子：
 
 ```csharp
 public interface ISomething {}
 public class Something : ISomething {}
 ```
 
-So this is a common binding scenario where you take an interface and bind it to a class *(often known as a Concrete Class in this context)*, which will mean that if I were to have a class like so:
+所以这是一个常见的绑定场景，您使用一个接口并将其绑定到一个类（在本文中通常称为具体类），这意味着如果我有这样一个类：
 
 ```csharp
 public class SomeClassWithDependency
@@ -61,36 +63,36 @@ public class SomeClassWithDependency
 }
 ```
 
-The dependency framework knows how to resolve the `ISomething` class for you, as we told it whenever you see `ISomething` pass it a `Something`. As mentioned almost all **DI** frameworks has the notion of this, and it is usually known as *Bind* or *Register*.
+依赖性框架知道如何为您解析 `ISomething` 类，正如我们在看到 `ISomething` 时告诉它的那样，只要您传递给它一个 `ISomething` 。如前所述，几乎所有DI框架都有这个概念，通常称为**Bind**或**Register**。
 
 #### Object Scoping (Transient, Singleton etc)
-Now we have covered the HOW of binding, lets look at how you can improve the binding lifetime of objects. So the above example will be known as **Transient** which means it will basically create a new instance of `Something` for every `ISomething` resolved. So for example if we had 3 classes with a dependency on `ISomething` there would be 3 instances of `Something` created. This may be fine however in some situations you may want to have only 1 instance of a given class.
+现在我们已经讨论了绑定的方式，让我们看看如何提高对象的绑定寿命。所以上面的例子将被称为Transient，这意味着它基本上会为每个解析的 `ISomething` 创建一个新的 `Something` 实例。例如，如果我们有3个类依赖于 `ISomething` ，就会创建3个 `Something` 实例。这可能是好的，但是在某些情况下，您可能希望只有一个给定类的实例。
 
 ```csharp
 Bind<ISomething>().To<Something>().InSingletonScope();
 ```
 
-So this now will provide us only a single instance of `Something` for every dependency. This here allows us to have an object which acts like a **singleton** but without any of the downsides. As mentioned in the previous chapters there is rarely a need for **singleton** and **static** classes explicitly when you use **DI** correctly, making your classes a lot less coupled and far easier to test as this is moved to be a configuration concern.
+因此，对于每个依赖项，现在只提供一个 `Something` 实例。这里允许我们有一个对象，它的行为就像一个单体，但没有任何缺点。如前几章所述，当您正确使用DI时，很少需要显式地使用单例类和静态类，这使得类的耦合性大大降低，并且更易于测试，因为这将成为一个配置问题。
 
 #### Binding to Instances/Self
-Another relevant binding scenario would be to an instance, which is not used that often but in some scenarios where you need to do some complex setup to create an instance, which would look like:
+另一个相关的绑定场景是一个实例，这个实例并不经常使用，但是在某些场景中，您需要进行一些复杂的设置来创建一个实例，这看起来像：
 
 ```csharp
 var something = new Something(); // or some complex setup
 Bind<ISomething>().ToConstant(something);
 ```
 
-This would pass the instance you have created around rather than letting the **DI** framework handle the creation. Almost all **DI** frameworks have the above notions.
+这将传递您创建的实例，而不是让DI框架处理创建。几乎所有的DI框架都有上述概念。
 
-You can also bind a class to itself, which is mainly used for **Concrete Classes**.
+还可以将类绑定到其自身，这主要用于**具体类**。
 
 ```csharp
 Bind<ConcreteClass>().ToSelf(); // Just use itself and sort the dependencies
 ```
-> There are far more binding scenarios, some are specific to the game dev world (such as binding to **prefabs**, **methods**, **gameobjects** with **Zenject**) an some are specific to the web dev world, ultimately you can read up more on this for each DI framework on their sites.
+> 有更多的绑定场景，一些是特定于游戏开发人员的世界（比如用**Zenject**绑定到**预置**、**方法**、**游戏对象**），还有一些是特定于web开发人员的世界，最终你可以在他们的站点上为每个DI框架读到更多关于这个的内容。
 
 ### Skill Transference
-So although this is all **Ninject** specific, the things learnt here can apply to other frameworks and platforms. For an example here is how to do common things in:
+因此，尽管这些都是针对特定对象 **Ninject** 的，但这里学到的知识可以应用于其他框架和平台。例如，这里的示例是如何在中执行常见操作：
 
 #### Using Zenject (Unity 3d)
 
@@ -124,27 +126,27 @@ public class MyModule : Module
 }
 ```
 
-As you can see although the syntax is slightly different it is still doing the same thing under the hood.
+正如你所看到的，虽然语法略有不同，但它仍然在做同样的事情。
 
 ## Resolving Bindings
 
-As mentioned earlier in almost all cases you will **ALWAYS WANT TO USE CONSTRUCTOR INJECTION** which is done automatically for you assuming you have adhered to **ioc**. There are however other scenarios you may need to handle, such as property injection or in the game dev world scene/gameobject injection (These will be discussed more in the game dev specific sections).
+正如前面提到的，在几乎所有的情况下，您**总是希望使用构造函数注入**，这是为您自动完成的，假设您遵守了**ioc**。但是，您可能需要处理其他场景，例如属性注入或游戏开发人员世界中的scene/gameobject注入（这些将在游戏开发人员特定部分中进行更多讨论）。
 
-> You almost always want to use **constructor injection** because it means your objects are unaware of the DI framework, i.e if you want to use property injection you often have to put an attribute on your property, and this property means you have to add `using SomeDIFramework` which makes that model and everything that uses it dependent upon a specific DI framework. You ideally do not want to fall into this trap as it is like a virus that spreads.
+> 您几乎总是希望使用构造函数注入，因为这意味着您的对象不知道DI框架，也就是说，如果您希望使用属性注入，您通常必须在属性上添加一个属性，这个属性意味着您必须添加 `using SomeDIFramework`，这使得该模型和使用它的所有内容都依赖于特定的DI框架。理想情况下，你不想落入这个陷阱，因为它就像一个病毒传播。
 
-Once you have setup how dependencies should be resolved you now need to get an instance of the type you need from the container (term for whatever stores all your bindings). This can be handled different ways depending on your scenario, for example in ASP MVC (web world) you would end up loading a bootstrapper which does the resolving for you, so you never need to manually resolve anything, however lets pretend we do need to manually resolve stuff.
+一旦设置了应该如何解析依赖项，现在就需要从容器中获取所需类型的实例（用于存储所有绑定的名称）。这可以根据您的场景以不同的方式处理，例如在ASP MVC（web世界）中，您最终将加载一个引导程序来为您进行解析，因此您不需要手动解析任何内容，但是让我们假设我们确实需要手动解析内容。
 
 ### Manually Resolving Instances
 
-Lets just fast forward a minute and say "this is how you resolve objects":
+让我们快进一分钟说“这就是解析对象的方式”：
 
 ```csharp
 var somethingImplementation = container.Get<ISomething>();
 ```
 
-Now that we have that out of the way lets rewind and look a bit more in depth as to what is happening from start to finish.
+既然我们已经排除了这个障碍，让我们回顾一下，看看从开始到结束发生了什么，更深入一点。
 
-> This is not 100% what is happening as the actual reflection may sometimes happen up front, sometimes at resolve time, and also in some cases it may have other metadata around how it should handle bindings, but for all intents and purposes this is accurate enough for you to get your head around what is happening under the hood.
+> 这并不是100%发生的事情，因为实际的反射有时会提前发生，有时会在解析时发生，而且在某些情况下，它可能会有其他元数据来描述它应该如何处理绑定，但是对于所有意图和目的来说，这都足够准确，可以让您了解引擎盖下发生的事情。
 
 ```csharp
 // Our class in some file
@@ -178,12 +180,12 @@ var someInstanceWithDependenciesMet = container.Get<ISomeClassWithDependency>();
 // 10. Once all dependencies are met instantiate and return implementation for ISomeClassWithDependency
 ```
 
-Now that may seem like a lot of steps but its actually quite simple and there is not much magic happening, it is just analyzing the dependency tree for what you need and sourcing all the dependencies ahead of time and returning you an object with everything built.
+现在这看起来像是很多步骤，但实际上很简单，也没有什么神奇的事情发生，它只是分析依赖树，为你需要什么，并提前寻找所有的依赖关系，并返回给你一个对象与一切建成。
 
-In most real world scenarios you may have very large trees as the more you adhere to good design practices (i.e composition over inheritance, ioc etc) you will end up having lots of smaller objects that will all be generated automatically for you as and when they are needed.
+在大多数真实场景中，您可能拥有非常大的树，因为您越是坚持良好的设计实践（即组合而不是继承、ioc等），最终您将拥有许多较小的对象，这些对象将在需要时自动为您生成。
 
-As we mentioned a while ago there are also the notion of scopes/lifetimes to factor in here, so if lets say we had done `Bind<ISomething>().To<Something>().InSingletonScope()` the container would only instantiate the implementation for `ISomething` once and then every time it was needed (be it directly or as a dependency in another class) it would just return back that existing implementation. This basically allows you to have singleton style instances without coding it as a singleton (see **anti-patterns** for topic on why singletons are iffy).
+正如我们刚才提到的，这里还需要考虑scopes/lifetimes的概念，因此，如果假设我们已经完成了 `Bind<ISomething>().To<Something>().InSingletonScope()` ，容器只会实例化一次 `ISomething` 的实现，然后每次需要它时（无论是直接的还是作为另一个类中的依赖项），它都会只需返回现有的实现。这基本上允许您拥有单例样式的实例，而无需将其编码为单例（有关为什么单例不确定的主题，请参阅反模式）。
 
 ### Auto Resolving
 
-In most real world use cases you wont need to resolve anything manually as most large frameworks in web/app world have bootstrapper libraries which will automatically resolve your classes for you under the hood, for example in [ASP MVC you can bootstrap Ninject](https://github.com/ninject/Ninject.Web.Mvc) which will automatically let all your bound `Controller` classes be registered within MVC so all you need to handle is the binding aspect. Same sort of thing in Unity with **Zenject** you just give it a project/scene context and your installers and off it goes, automatically resolving all your parts for you.
+在大多数真实世界的用例中，您不需要手动解析任何内容，因为webapp世界中的大多数大型框架都有引导程序库，它们将自动为您解析类，例如在[ASP MVC中，您可以引导Ninject](https://github.com/ninject/Ninject.Web.Mvc)它将自动让所有绑定的 `Controller` 类在MVC中注册，因此您只需要处理绑定方面。和**Zenject**一样，你只要给它一个project/scene上下文和你的安装程序，然后关闭它，自动为你解析所有的部分。
